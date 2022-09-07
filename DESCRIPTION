@@ -1,0 +1,48 @@
+Package: TENxMultiomeTools
+Type: Package
+Title: Provides multiple functionalities for working with 10X Multiome data
+Version: 0.1.0
+Authors@R: c(
+    person(given = "Dario",
+           family = "Righelli",
+           role = c("aut", "cre"),
+           email = "dario.righelli@gmail.com"),
+    person(given = "Elena",
+           family = "Zuin",
+           role = "ctb",
+           email = "elena.zuin3@gmail.com"),
+    person(given = "Davide",
+           family = "Risso",
+           role = c("aut"),
+           email = "risso.davide@gmail.com")
+    )
+Maintainer: Dario Righelli <dario.righelli@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+BugReports: https://github.com/drighelli/TENxMultiomeToolsAllenInstituteDemo/issues
+biocViews: SingleCell, ATACSeq, RNASeq
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
+Depends:
+    SingleCellExperiment
+Imports: 
+    Signac,
+    Seurat,
+    DropletUtils,
+    S4Vectors,
+    ggpubr,
+    rhdf5,
+    scater,
+    scuttle,
+    SingleR,
+    ggplot2
+Suggests: 
+    BiocStyle, 
+    EnsDb.Mmusculus.v79
+Remotes: 
+    drighelli/AllenBrainInstituteData
+SystemRequirements:
+    sinto,
+    samtools

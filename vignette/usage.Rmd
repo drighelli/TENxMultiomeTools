@@ -1,0 +1,146 @@
+---
+title: "usage"
+author: "Dario Righelli"
+date: "2022-08-30"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+```{r}
+library(TENxMultiomeTools)
+library(AllenInstituteBrainData)
+library(Signac)
+library(Seurat)
+library(EnsDb.Mmusculus.v79)
+library(scuttle)
+```
+
+# Loading Data
+
+describe altExp 
+
+```{r, eval=FALSE}
+sce <- read10xMultiome(
+    sample.path=bamdir,
+    type="sparse",
+    data="filtered",
+    compressed=TRUE,
+    col.names=TRUE,
+    addfrags=TRUE,
+    reference="RNA")
+```
+
+# Create Annotation
+
+```{r}
+ensdb <- EnsDb.Mmusculus.v79
+seqlevelsStyle(ensdb) <- "UCSC"
+annotation <- GetGRangesFromEnsDb(ensdb = ensdb)
+# seqlevelsStyle(annotation) <- "UCSC"
+genome(annotation) <- "mm10"
+```
+
+
+# Quality Control
+
+## Signac Metrics
+
+```{r}
+sce <- computeSignacMetrics(sce, annotation)
+```
+
+## Signac Filters
+
+```{r}
+sce <- computeFilterCellsMetrics(sce, metric="quantile",
+    lowQuantThr="5%", highQuantThr="90%",
+    nucleosomeThr=2, TSSThr=1)
+```
+
+## Quality Control Plots
+
+```{r}
+plotFilteredCells(sce, name="test", inout="out")
+plotFilteredCells(sce, name="test", inout="in")
+```
+
+
+
+# Filtering Cells
+
+```{r}
+sce <- sce[,sce$in_signac]
+sce <- logNormCounts(sce)
+```
+
+
+## Doublets
+
+Additionally it is possible to check cell quality by computing doublets scores
+with the scDblFinder package, which offers multiple methods for doublets 
+detection.
+Even the results provided by this package are still under verification,
+we suggest to use it to better understand the quality of the cells in the 
+experiment.
+Actually, we implemented the method for the scRNAseq data, but further 
+implementations will take into account methods for scATACseq data.
+
+```{r}
+sce <- computeDoublets(sce, method="griffiths")
+```
+
+It is possible to visualize these results with a simple TSNE plot, but better
+investigations can be done when cell types labels will be assigned to our cells.
+
+```{r}
+plotTSNE(sce, colour_by="dbl.scores") + theme_bw()
+plotTSNE(sce, colour_by="dbl.calls") + theme_bw()
+```
+
+
+# assign cell labels
+
+## Cell Types Reference
+
+we download the allen reference dataset for retrieving labels, then we create pseudobulk of it to speed up our computations.
+
+```{r}
+allen <- AllenInstituteBrainData("Allen_Mouse_2020")
+allen <- aggregateAcrossCells(allen, use.assay.type = "counts",id=DataFrame(label=allen$subclass_label))
+allen <- logNormCounts(allen)
+### check id mapping
+```
+
+## Assigning labels to the cells 
+
+```{r}
+sce <- assignLabels(sce, allen, "subclass_label")
+head(sce$SingleR)
+```
+
+# visualize doublets and cell types
+
+```{r}
+
+```
+
+# compute pseudobulk RNAseq
+
+# compute pseudobulk ATACseq
+
+
+# create and export tracks
+
+create UCSC session with rtracklayer
+
+
+
+
+
