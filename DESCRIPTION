@@ -42,7 +42,8 @@ Suggests:
     BiocStyle, 
     EnsDb.Mmusculus.v79
 Remotes: 
-    drighelli/AllenBrainInstituteData
+    drighelli/AllenInstituteBrainData
 SystemRequirements:
     sinto,
-    samtools
+    samtools,
+    deeptools
