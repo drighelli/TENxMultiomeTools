@@ -20,15 +20,51 @@ library(Signac)
 library(Seurat)
 library(EnsDb.Mmusculus.v79)
 library(scuttle)
+library(scater)
 ```
+
+# Introduction
+
+Describe Multiome data
+
+highlight that this is a pipeline intended for differential analysis of multiome data
+
+We defined it while working on a complex design of 12 different multiome samples 
+of mouse brain cortex in 4 different condition.
+
+Because the data are not published yet, we are using a publicly available dataset
+to illustrate the available functionalities of the package.
 
 # Loading Data
 
-describe altExp 
+To facilitate 10x Genomics Multiome data loading we can use the `read10xMultiome` 
+function, which takes the following parameters as input:
+
++ `sample_path`: the path of the experiment
++ type: the type of data to load, sparse/hdf5
++ data: data type to load, filtered or raw
++ compressed: logical indicating if the data are stored in a compressed format
++ col.names: logical indicating if to add ID to the cols of the assays.
++ addfrags: logical indicating if the path to the frag file has to be saved in 
+the sce. Note that this is needed when computing the metrics in the next step.
++ reference: character indicating the reference assay to use as main assay
+
+This function loads the data in a SingleCellExperiment format, creating a main
+assay and an altExp assay, which is another SingleCellExperiment object.
+The colData of the main assay will always contain the information related to the
+cells of the experiment, so it will not be replicated twice, but only stored in
+the main one.
+On the other hand the information related to the rows of the assays differ because
+for the RNA a rowData DataFrame stores information about the genes, while for 
+the ATAC data it will be in a rowRanges format. This format allows to store the
+information about the peaks in a GenomicRanges format where the genomic coordinates 
+are in the form of Chromosome, Start and End while additional data are stored in
+the mcols DataFrame.
 
 ```{r, eval=FALSE}
+path="multiome_website_mouse_old/outs/"
 sce <- read10xMultiome(
-    sample.path=bamdir,
+    sample.path=path,
     type="sparse",
     data="filtered",
     compressed=TRUE,
@@ -39,24 +75,68 @@ sce <- read10xMultiome(
 
 # Create Annotation
 
+The 10x Multiome default output comes with an annotation file for the detected
+genes, but this file could be very heavy to store in memory and to manipulate.
+A way to avoid this is to create an annotation by aid of an EnsDb package, which
+downloads the annotation data for an entire genome.
+
 ```{r}
 ensdb <- EnsDb.Mmusculus.v79
 seqlevelsStyle(ensdb) <- "UCSC"
 annotation <- GetGRangesFromEnsDb(ensdb = ensdb)
-# seqlevelsStyle(annotation) <- "UCSC"
 genome(annotation) <- "mm10"
 ```
 
 
 # Quality Control
 
+Once that we have the data loaded and an annotation object in GenomicRanges format,
+we can start by computing some quality control metrics.
+
+At the moment we defined three quality controls approaches, the Signac metrics, 
+the `scuttle::isOutlier` and the doublets detection implemented in the 
+`scDblFinder` package, but we'll focus on the Signac metrics for this tutorial.
+
 ## Signac Metrics
+
+At the moment we implemented a wrapper for the Signac package (available on CRAN),
+which allows to compute multiple metrics both on RNA and ATAC data.
+
+The metrics computed by Signac are defined as follows: 
+
++ number of counts per each gene for the RNA and each feature for the ATAC
++ the number of features on the RNA
++ computing the ratio of fragments between 147 bp and 294 bp (mononucleosome) 
+to fragments < 147 bp (nucleosome-free)
++ computing the TSS enrichment score as defined by *Encode*: 
+++ normalized score on the number of reads around (2000bp up/down) the TSS 
 
 ```{r}
 sce <- computeSignacMetrics(sce, annotation)
 ```
 
-## Signac Filters
+
+## Compute filters on the previous metrics
+
+Once we have the Signac metrics computed, we can use them to filter-out 
+low-quality cells.
+To do so, we decided to compute the quantiles of the distribution of each 
+metric.
+
+We defined the low-quality cells as the ones that have at the same time all these
+checks passed:
++ number of counts per genes and features lower than the lowest quantile 
+(default 5%) and higher than the highest quantile (default 95%).
++ number of features on the RNA lower than the lowest quantile (default 5%) 
+and higher than the highest quantile(default 95%).
++ nucleosome signal lower than 2
++ TSS enrichment lower that 1
+
+We can choose this thresholds by hand with the `lowQuantThr`, `highQuantThr`, 
+`nucleosomeThr` and `TSSThr`, parameters in the `computeFilterCellsMetrics` 
+function.
+
+Of course the default parameters can be chosen with an heuristic approach.
 
 ```{r}
 sce <- computeFilterCellsMetrics(sce, metric="quantile",
@@ -66,31 +146,39 @@ sce <- computeFilterCellsMetrics(sce, metric="quantile",
 
 ## Quality Control Plots
 
+We can take a look to the distributions and the labeled cells with the 
+`plotFilteredCells` function, which shows violin plots for all the metrics 
+computed and colors the cells based on the quality control passed/not passed 
+label.
+
+The arguments of this function allow to plot the filtered-in/out cells with the 
+`inout` parameter. Of course we are mainly interested in the filtered-out cells
+because we want to better understand if there is something important the we're
+filtering out.
+
+It is also possible to pass a custom column with a user-defined column name 
+with TRUE/FALSE values indicating the kept/filtered cells, by aid of the
+`filterCellsBy` and `customColName` parameters.
+
 ```{r}
 plotFilteredCells(sce, name="test", inout="out")
-plotFilteredCells(sce, name="test", inout="in")
 ```
-
-
-
-# Filtering Cells
-
-```{r}
-sce <- sce[,sce$in_signac]
-sce <- logNormCounts(sce)
-```
-
 
 ## Doublets
 
-Additionally it is possible to check cell quality by computing doublets scores
-with the scDblFinder package, which offers multiple methods for doublets 
-detection.
-Even the results provided by this package are still under verification,
+Another Quality Control on the cells can be done by computing doublets scores.
+We implemented a wrapped on the `scDblFinder` package, 
+because it offers multiple methods for doublets detection.
+In particular, the doublet score for each cell is based on the density of 
+simulated doublets around it.
+
+Even if the results provided by this package are still under verification,
 we suggest to use it to better understand the quality of the cells in the 
 experiment.
+
 Actually, we implemented the method for the scRNAseq data, but further 
-implementations will take into account methods for scATACseq data.
+implementations will take into account methods for scATACseq data and further
+investigations need to be done on how to apply these methods on both assays.
 
 ```{r}
 sce <- computeDoublets(sce, method="griffiths")
@@ -99,46 +187,157 @@ sce <- computeDoublets(sce, method="griffiths")
 It is possible to visualize these results with a simple TSNE plot, but better
 investigations can be done when cell types labels will be assigned to our cells.
 
+But to better understand the doublets we suggest to assign cell labels first and
+then to investigate where the doublets fall in our dataset.
+
 ```{r}
 plotTSNE(sce, colour_by="dbl.scores") + theme_bw()
 plotTSNE(sce, colour_by="dbl.calls") + theme_bw()
 ```
 
+## Filtering Cells
 
-# assign cell labels
+Once we retain satisfied with the Quality Controls we can proceed by filtering
+the cells and to normalize the data.
+
+We highlight that the `in_signac` column is automatically computed in the 
+`computeFilterCellsMetrics` and it is a logical AND across all the metrics 
+described in the previous "Signac" steps.
+
+```{r}
+sce <- sce[,sce$in_signac]
+sce <- logNormCounts(sce)
+```
+
+
+# Assign Cell Labels
+
+To assign cell labels there are several methods available in literature, some of
+which requires a reference dataset which helps to map the cell labels from the
+reference to our dataset.
+
+At the moment there are not so many reliable reference dataset easisly available,
+in particular with validated cell types and, obviously, not for any kind of tissue
+we could need.
 
 ## Cell Types Reference
 
-we download the allen reference dataset for retrieving labels, then we create pseudobulk of it to speed up our computations.
+For this tutorial, we are using a reference dataset from the Allen Institute, 
+available from the AllenInstituteBrainData package (https://github.com/drighelli/AllenInstituteBrainData) 
+which allows to download an annotated dataset of ~1 Million mouse brain cells 
+annotated at three different levels of taxonomy. 
+
+After downloading the dataset, it could be useful to create pseudobulk counts
+to speed up our computations.
+Using a reference of 1 Million cells could take very long time during the process
+of cell type annotation, and from our tests using the pseudobuld counts is a 
+pretty good approximation in terms of the obtained results.
 
 ```{r}
 allen <- AllenInstituteBrainData("Allen_Mouse_2020")
 allen <- aggregateAcrossCells(allen, use.assay.type = "counts",id=DataFrame(label=allen$subclass_label))
 allen <- logNormCounts(allen)
-### check id mapping
 ```
 
+We need to map the annotation in the same gene format as our dataset to compute
+the cell labels in the next step.
+
+```{r}
+symbol_allen <- rownames(allen)
+map <- mapIds(EnsDb.Mmusculus.v79, keys= symbol_allen, keytype = "SYMBOL", column = "GENEID")
+stopifnot(length(map) == nrow(allen))
+rowData(allen)$symbol <- symbol_allen
+rowData(allen)$ens <- map
+allen <- allen[!is.na(rowData(allen)$ens),]
+rownames(allen) <- rowData(allen)$ens
+```
+
+
 ## Assigning labels to the cells 
+
+At this point we can simply assign the labels from the reference to our 
+dataset. 
+At the moment, we created a wrapper `assignLabels` around the SingleR package, 
+but, as already mentioned, there is plenty of methods that can be used for this 
+scope.
+
+Indeed, further versions of this function will implement other methods.
 
 ```{r}
 sce <- assignLabels(sce, allen, "subclass_label")
 head(sce$SingleR)
 ```
 
-# visualize doublets and cell types
+# Visualizing cell types
+
+Once we have the cell types labeled for our experiment, we are interested in 
+understanding their clustering and this can be easily done with the `plotTSNE`
+function of the `scater` package.
 
 ```{r}
 
 ```
 
-# compute pseudobulk RNAseq
+# Differential Analysis
 
-# compute pseudobulk ATACseq
+We selected two main approaches for doing differential analysis of these data,
+by applying muscat (working on single cell data) and by using edgeR (working on
+bulk data).
 
+Because the second one produced better results on our datasets, we are going to 
+illustrate the steps that can be performed to apply edgeR on single cell data
+to obtain differentially expressed genes (RNA) and differential accessible 
+regions (ATAC).
+
+To apply bulk analysis methods on single cell data, these need to be transformed
+in pseudo-bulk counts, and to do so there are multiple methods able to do that.
+
+NB: We are not pointing to not use muscat (or other methods), but to always compare 
+the results produced by multiple approaches to better investigate your data.
+
+# Pseudobulk scRNAseq
+
+A possible approach to obtain pseudobulk data from your single cell is to 
+use the `aggregateAcrossCells` method from the `scuttle` package
+(as previously done for the reference dataset).
+
+To apply this method we simply have to define a named vector of the cell types 
+to use for the aggregation of the cells.
+In our case, we saved this information in the colData of our SingleCellExperiment
+under the SingleR column
+
+This approach is pretty straightforward when working with a scRNAseq because the
+genes are well defined even when working with multiple experiments. 
+
+In the end we'll have a new SingleCellExperiment with a reduced number of 
+columns, which, in turn, will be the same number of cell types defined in our
+SingleR colData column.
+
+```{r}
+sce <- aggregateAcrossCells(sce, use.assay.type="counts",
+        id=DataFrame(label=sce$SingleR))
+```
+
+# Pseudobulk scATACseq
+
+```{r}
+
+```
 
 # create and export tracks
 
 create UCSC session with rtracklayer
+
+```{r}
+
+```
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
 
 
 

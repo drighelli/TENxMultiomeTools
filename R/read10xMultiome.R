@@ -110,8 +110,6 @@ read10xMultiome <- function(
         }
     }
     colData(altExp(sce)) <- colData(sce)
-    # print("rownames")
-    # rownames(counts(altExp(sce))) <- rowData(altExp(sce))$ID
     mainExpName(sce) <- "RNA"
     altExpNames(sce) <- "ATAC"
     if (annotation)
@@ -127,11 +125,23 @@ read10xMultiome <- function(
         mcols(rowRanges(altExp(sce)))$distance <- anno$distance[map]
         mcols(rowRanges(altExp(sce)))$peak_type <- anno$peak_type[map]
     }
-    if (reference == "ATAC") sce <- swapAltExp(sce, "ATAC", withColData=FALSE)
 
+    sce <- .setRowNames(sce)
+    altExp(sce) <- .setRowNames(altExp(sce))
+    if (reference == "ATAC") sce <- swapAltExp(sce, "ATAC", withColData=FALSE)
     return(sce)
 }
 
+.setRowNames <- function(sce)
+{
+    if(!("ID" %in% colnames(rowData(sce))))
+    {
+        warning("Impossible to auto-set the rownames to the SingleCellExperiment")
+    } else {
+        rownames(sce) <- rowData(sce)$ID
+    }
+    return(sce)
+}
 #' @importFrom Matrix readMM
 .readSparse <- function(filepath, compressed)
 {
