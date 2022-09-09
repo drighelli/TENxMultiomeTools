@@ -11,6 +11,7 @@
 #' @export
 #' @importFrom scDblFinder computeDoubletDensity doubletThresholding
 #' @importFrom S4Vectors cbind.DataFrame
+#' @importFrom scran getTopHVGs
 #' @examples
 #' # TBD
 #'

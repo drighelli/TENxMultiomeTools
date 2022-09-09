@@ -61,7 +61,7 @@ information about the peaks in a GenomicRanges format where the genomic coordina
 are in the form of Chromosome, Start and End while additional data are stored in
 the mcols DataFrame.
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 path="multiome_website_mouse_old/outs/"
 sce <- read10xMultiome(
     sample.path=path,
