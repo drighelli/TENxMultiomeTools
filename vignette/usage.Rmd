@@ -8,7 +8,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
 
 # Requirements
@@ -181,6 +181,7 @@ implementations will take into account methods for scATACseq data and further
 investigations need to be done on how to apply these methods on both assays.
 
 ```{r}
+sce <- logNormCounts(sce)
 sce <- computeDoublets(sce, method="griffiths")
 ```
 
@@ -191,6 +192,8 @@ But to better understand the doublets we suggest to assign cell labels first and
 then to investigate where the doublets fall in our dataset.
 
 ```{r}
+sce <- runPCA(sce, ntop=length(rownames(sce)))
+sce <- runTSNE(sce, dimred="PCA")
 plotTSNE(sce, colour_by="dbl.scores") + theme_bw()
 plotTSNE(sce, colour_by="dbl.calls") + theme_bw()
 ```
@@ -244,6 +247,7 @@ the cell labels in the next step.
 
 ```{r}
 allen <- readRDS("allen_pseudo.RDS")
+rownames(allen) <- rowData(allen)$X
 symbol_allen <- rownames(allen)
 map <- mapIds(EnsDb.Mmusculus.v79, keys= symbol_allen, keytype = "SYMBOL", column = "GENEID")
 stopifnot(length(map) == nrow(allen))

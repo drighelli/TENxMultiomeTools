@@ -17,6 +17,7 @@
 #'
 computeDoublets <- function(sce, method=c("auto", "optim", "dbr", "griffiths"))
 {
+
     ## needs to include methods for ATACseq data
     topgs <- getTopHVGs(sce, prop=0.1)
     scores <- computeDoubletDensity(sce, subset.row=topgs)
