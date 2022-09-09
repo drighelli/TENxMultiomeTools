@@ -233,7 +233,7 @@ Using a reference of 1 Million cells could take very long time during the proces
 of cell type annotation, and from our tests using the pseudobuld counts is a 
 pretty good approximation in terms of the obtained results.
 
-```{r}
+```{r, eval=FALSE}
 allen <- AllenInstituteBrainData("Allen_Mouse_2020")
 allen <- aggregateAcrossCells(allen, use.assay.type = "counts",id=DataFrame(label=allen$subclass_label))
 allen <- logNormCounts(allen)
@@ -243,6 +243,7 @@ We need to map the annotation in the same gene format as our dataset to compute
 the cell labels in the next step.
 
 ```{r}
+allen <- readRDS("allen_pseudo.RDS")
 symbol_allen <- rownames(allen)
 map <- mapIds(EnsDb.Mmusculus.v79, keys= symbol_allen, keytype = "SYMBOL", column = "GENEID")
 stopifnot(length(map) == nrow(allen))
@@ -275,7 +276,8 @@ understanding their clustering and this can be easily done with the `plotTSNE`
 function of the `scater` package.
 
 ```{r}
-
+tsne <- plotTSNE(multiome[[n]],colour_by="SingleR")+
+        scale_color_manual(values=subclass.10xgenomics.color)
 ```
 
 # Differential Analysis
@@ -332,17 +334,15 @@ it could be problematic to compute a pseudo-bulk counts, because of the
 differences across the peaks.
 
 At the moment we are implementing (still needing some bug fixing and testing) a 
-solution to this problem by adapting the `finalRegions` function present in the DEScan2 package.
+solution to this problem by adapting the `finalRegions` function present in the 
+DEScan2 package, which will return a new SingleCellExperiment object with the 
+count matrix computed on the multiple experiments.
 
-```{r}
+Both previous operations on a single experiment can be made with our wrapper 
+`computePseudoBulk` in a unique instruction that computes pseudobulk counts
+both for RNA and ATAC assays.
 
-```
-
-
-Both previous operations can be made with our wrapper `computePseudoBulk` in a 
-unique instruction
-
-```{r}
+```{r, eval=FALSE}
 sce_pseudo <- computePseudoBulk(sce, ctCol="SingleR")
 ```
 
@@ -355,12 +355,28 @@ approaches like edgeR and DESeq2.
 
 # Create and export tracks
 
-In order to visualize tracks for the 
+In order to visualize tracks for a specific cell type in the UCSC Genome Browser 
+we implemented a function which takes care to export our data in BigWig format.
+To do so, the function needs some external software and the path to the original
+bam files of the experiment.
 
-create UCSC session with rtracklayer
+In particular it uses the following tools:
 
-```{r}
++ sinto: a python software to create bam files per each cell type starting from 
+a list of barcodes (the ones of the specified cell type)
++ samtools: useful to sort and index the new bam files
++ deeptools bamCoverage: to create bigwig files of the freshly created bam files
 
+Once we have the bigwig files, we can easily create a new session in the 
+UCSC Genome Browser and upload them to inspect them
+
+Further implementation of this function will try to avoid as much external 
+tools as possible, possibly by aid of the rtracklayer package, and automatically
+create a session with the desired tracks.
+
+```{r, eval=FALSE}
+createTracks(sce, cellTypesCol="SingleR", cellType="CR", bamdir=path, 
+    outdir=path, ncores=10)
 ```
 
 # Session Info
