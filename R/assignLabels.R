@@ -23,6 +23,6 @@ assignLabels <- function(sce, reference, refColLab, ...)
         (refColLab %in% colnames(colData(reference)))))
     preds <- SingleR(sce, ref=reference,
         labels=reference[[refColLab]], ...)
-    sce$singleR <- preds$labels
+    sce$SingleR <- preds$labels
     return(sce)
 }

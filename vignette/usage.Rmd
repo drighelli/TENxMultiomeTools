@@ -295,7 +295,7 @@ in pseudo-bulk counts, and to do so there are multiple methods able to do that.
 NB: We are not pointing to not use muscat (or other methods), but to always compare 
 the results produced by multiple approaches to better investigate your data.
 
-# Pseudobulk scRNAseq
+## Pseudobulk
 
 A possible approach to obtain pseudobulk data from your single cell is to 
 use the `aggregateAcrossCells` method from the `scuttle` package
@@ -314,17 +314,48 @@ columns, which, in turn, will be the same number of cell types defined in our
 SingleR colData column.
 
 ```{r}
-sce <- aggregateAcrossCells(sce, use.assay.type="counts",
+sce_pseudo <- aggregateAcrossCells(sce, use.assay.type="counts",
         id=DataFrame(label=sce$SingleR))
 ```
 
-# Pseudobulk scATACseq
+The same operation can be made on a single ATAC experiment obtaining the same 
+number of columns as for the RNA.
+
+```{r}
+sce_pseudo_atac <- aggregateAcrossCells(altExp(sce), use.assay.type="counts",
+        id=DataFrame(label=sce$SingleR))
+altExp(sce_pseudo) <- sce_pseudo_atac
+```
+
+But when we have multiple ATAC experiments, coming from different conditions,
+it could be problematic to compute a pseudo-bulk counts, because of the 
+differences across the peaks.
+
+At the moment we are implementing (still needing some bug fixing and testing) a 
+solution to this problem by adapting the `finalRegions` function present in the DEScan2 package.
 
 ```{r}
 
 ```
 
-# create and export tracks
+
+Both previous operations can be made with our wrapper `computePseudoBulk` in a 
+unique instruction
+
+```{r}
+sce_pseudo <- computePseudoBulk(sce, ctCol="SingleR")
+```
+
+At this point is easy to apply standard bulk pipelines to obtain differentially
+expressed genes and differentially accessible regions, per each cell type across
+different conditions.
+
+Like applying normalization, PCA, gene-filtering and classical differential 
+approaches like edgeR and DESeq2.
+
+# Create and export tracks
+
+In order to visualize tracks for the 
 
 create UCSC session with rtracklayer
 
