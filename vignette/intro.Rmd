@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 
 # Requirements
 
-```{r}
+```{r, message=FALSE}
 library(TENxMultiomeTools)
 library(AllenInstituteBrainData)
 library(Signac)
@@ -56,25 +56,25 @@ To facilitate 10x Genomics Multiome data loading we can use the `read10xMultiome
 function, which takes the following parameters as input:
 
 + `sample_path`: the path of the experiment
-+ type: the type of data to load, sparse/hdf5
-+ data: data type to load, filtered or raw
-+ compressed: logical indicating if the data are stored in a compressed format
-+ col.names: logical indicating if to add ID to the cols of the assays.
-+ addfrags: logical indicating if the path to the frag file has to be saved in 
++ `type`: the type of data to load, sparse/hdf5
++ `data`: data type to load, filtered or raw
++ `compressed`: logical indicating if the data are stored in a compressed format
++ `col.names`: logical indicating if to add ID to the cols of the assays.
++ `addfrags`: logical indicating if the path to the frag file has to be saved in 
 the sce. Note that this is needed when computing the metrics in the next step.
-+ reference: character indicating the reference assay to use as main assay
++ `reference`: character indicating the reference assay to use as main assay
 
-This function loads the data in a SingleCellExperiment format, creating a main
-assay and an altExp assay, which is another SingleCellExperiment object.
-The colData of the main assay will always contain the information related to the
+This function loads the data in a `SingleCellExperiment` format, creating a `main`
+assay and an `altExp` assay, which is another `SingleCellExperiment` object.
+The `colData` of the main assay will always contain the information related to the
 cells of the experiment, so it will not be replicated twice, but only stored in
 the main one.
 On the other hand the information related to the rows of the assays differ because
-for the RNA a rowData DataFrame stores information about the genes, while for 
-the ATAC data it will be in a rowRanges format. This format allows to store the
-information about the peaks in a GenomicRanges format where the genomic coordinates 
-are in the form of Chromosome, Start and End while additional data are stored in
-the mcols DataFrame.
+for the RNA a `rowData` `DataFrame` stores information about the genes, while for 
+the ATAC data it will be in a `rowRanges` format. This format allows to store the
+information about the peaks in a `GenomicRanges` format where the genomic
+coordinates are in the form of Chromosome, Start and End while additional data 
+are stored in the `mcols` `DataFrame.`
 
 ```{r, eval=TRUE}
 path="multiome_website_mouse_old/outs/"
@@ -86,11 +86,16 @@ sce <- read10xMultiome(
     col.names=TRUE,
     addfrags=TRUE,
     reference="RNA")
+sce
+colData(sce)
+rowData(sce)
+altExp(sce)
+rowRanges(altExp(sce))
 ```
 
 # Create Annotation
 
-The 10x Multiome default output comes with an annotation file for the detected
+The 10x Multiome default output comes with an `annotation` file for the detected
 genes, but this file could be very heavy to store in memory and to manipulate.
 A way to avoid this is to create an annotation by aid of an EnsDb package, which
 downloads the annotation data for an entire genome.
@@ -133,7 +138,7 @@ sce <- computeSignacMetrics(sce, annotation)
 
 ## Compute filters on the previous metrics
 
-Once we have the Signac metrics computed, we can use them to filter-out 
+Once we have the `Signac` metrics computed, we can use them to filter-out 
 low-quality cells.
 To do so, we decided to compute the quantiles of the distribution of each 
 metric.
@@ -172,7 +177,7 @@ because we want to better understand if there is something important the we're
 filtering out.
 
 It is also possible to pass a custom column with a user-defined column name 
-with TRUE/FALSE values indicating the kept/filtered cells, by aid of the
+with `TRUE`/`FALSE` values indicating the kept/filtered cells, by aid of the
 `filterCellsBy` and `customColName` parameters.
 
 ```{r}
@@ -182,7 +187,7 @@ plotFilteredCells(sce, name="test", inout="out")
 ## Doublets
 
 Another Quality Control on the cells can be done by computing doublets scores.
-We implemented a wrapped on the `scDblFinder` package, 
+We implemented a wrapper on the `scDblFinder` package, 
 because it offers multiple methods for doublets detection.
 In particular, the doublet score for each cell is based on the density of 
 simulated doublets around it.
@@ -201,10 +206,8 @@ sce <- computeDoublets(sce, method="griffiths")
 ```
 
 It is possible to visualize these results with a simple TSNE plot, but better
-investigations can be done when cell types labels will be assigned to our cells.
-
-But to better understand the doublets we suggest to assign cell labels first and
-then to investigate where the doublets fall in our dataset.
+investigations can be done when cell types labels will be assigned to our cell 
+and looking where the doublets fall in our dataset.
 
 ```{r}
 sce <- runPCA(sce, ntop=length(rownames(sce)))
@@ -219,7 +222,7 @@ Once we retain satisfied with the Quality Controls we can proceed by filtering
 the cells and to normalize the data.
 
 We highlight that the `in_signac` column is automatically computed in the 
-`computeFilterCellsMetrics` and it is a logical AND across all the metrics 
+`computeFilterCellsMetrics` and it is a logical `AND` across all the metrics 
 described in the previous "Signac" steps.
 
 ```{r}
@@ -241,14 +244,22 @@ we could need.
 ## Cell Types Reference
 
 For this tutorial, we are using a reference dataset from the Allen Institute, 
-available from the AllenInstituteBrainData package (https://github.com/drighelli/AllenInstituteBrainData) 
+available from the `AllenInstituteBrainData` package [https://github.com/drighelli/AllenInstituteBrainData](https://github.com/drighelli/AllenInstituteBrainData) 
 which allows to download an annotated dataset of ~1 Million mouse brain cells 
 annotated at three different levels of taxonomy. 
 
-After downloading the dataset, it could be useful to create pseudobulk counts
+This reference has three levels of annotation graularity:
+
++ the cluster level is the level where the cells have been clustered in
++ the subclass level is the level where the cells have been validated thank to cell-type
+markers
++ the class level is the level where the cells have been grouped together because
+of cell-types belonging to the same cell family.
+
+After downloading the dataset, it could be useful to create pseudo-bulk counts
 to speed up our computations.
 Using a reference of 1 Million cells could take very long time during the process
-of cell type annotation, and from our tests using the pseudobuld counts is a 
+of cell type annotation, and from our tests using the pseudo-bulk counts is a 
 pretty good approximation in terms of the obtained results.
 
 ```{r, eval=FALSE}
@@ -277,11 +288,12 @@ rownames(allen) <- rowData(allen)$ens
 
 At this point we can simply assign the labels from the reference to our 
 dataset. 
-At the moment, we created a wrapper `assignLabels` around the SingleR package, 
+At the moment, we created a wrapper `assignLabels` around the `SingleR` package, 
 but, as already mentioned, there is plenty of methods that can be used for this 
 scope.
 
-Indeed, further versions of this function will implement other methods.
+Indeed, further versions of this function will implement other methods, 
+i.e. `Azimuth` from Rahul Satija lab.
 
 ```{r}
 allen <- logNormCounts(allen)
@@ -296,7 +308,7 @@ understanding their clustering and this can be easily done with the `plotTSNE`
 function of the `scater` package.
 
 ```{r}
-tsne <- plotTSNE(sce,colour_by="SingleR")
+tsne <- plotTSNE(sce, colour_by="SingleR")
 ```
 
 # Differential Analysis
@@ -380,23 +392,23 @@ approaches like edgeR and DESeq2.
 
 # Create and export tracks
 
-In order to visualize tracks for a specific cell type in the UCSC Genome Browser 
-we implemented a function which takes care to export our data in BigWig format.
+In order to visualize tracks for a specific cell type in the *UCSC Genome Browser* 
+we implemented a function which takes care to export our data in *BigWig* format.
 To do so, the function needs some external software and the path to the original
 bam files of the experiment.
 
 In particular it uses the following tools:
 
-+ sinto: a python software to create bam files per each cell type starting from 
++ `sinto`: a python software to create bam files per each cell type starting from 
 a list of barcodes (the ones of the specified cell type)
-+ samtools: useful to sort and index the new bam files
-+ deeptools bamCoverage: to create bigwig files of the freshly created bam files
++ `samtools`: useful to sort and index the new bam files
++ `deeptools` bamCoverage: to create bigwig files of the freshly created bam files
 
-Once we have the bigwig files, we can easily create a new session in the 
-UCSC Genome Browser and upload them to inspect them
+Once we have the *BigWig* files, we can easily create a new session in the 
+*UCSC Genome Browser* and upload them to inspect them.
 
 Further implementation of this function will try to avoid as much external 
-tools as possible, possibly by aid of the rtracklayer package, and automatically
+tools as possible, possibly by aid of the `rtracklayer` package, and automatically
 create a session with the desired tracks.
 
 ```{r, eval=FALSE}
