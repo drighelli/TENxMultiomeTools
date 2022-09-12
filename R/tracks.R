@@ -42,6 +42,8 @@ createTracks <- function(sce, cellTypesCol="singleR", cellType, bamdir, outdir,
         message("executing sinto to create ", cellType, " bam file")
         message(cmd)
         system(cmd)
+        bamiout <- list.files(path=bamiout, pattern=cellType, full.names=TRUE)
+        bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
         message("executing samtools index to sort ", cellType, " bam file")
         message(cmd)

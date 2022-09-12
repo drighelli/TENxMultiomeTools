@@ -1,13 +1,20 @@
 ---
-title: "usage"
+title: "An introduction to the TENxMultiomeTools package"
 author: "Dario Righelli"
-date: "2022-08-30"
-output: html_document
+date: "2022-09-14"
+output: 
+    BiocStyle::html_document:
+        toc_float: true
+    vignette: >
+      %\VignetteIndexEntry{An introduction to the TENxMultiomeTools package}
+      %\VignetteEngine{knitr::rmarkdown}
+      %\VignetteEncoding{UTF-8}
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
+library(BiocStyle)
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
 
@@ -25,15 +32,23 @@ library(scater)
 
 # Introduction
 
-Describe Multiome data
+The `TENxMultiomeTools` package is a work in progress project intended to 
+facilitate the loading and handling of 10x Genomics multiome data in
+SingleCellExperiment format
 
-highlight that this is a pipeline intended for differential analysis of multiome data
-
-We defined it while working on a complex design of 12 different multiome samples 
+This pipeline is designed for differential analysis of multiple samples in 
+different conditions.
+We defined it while working on a complex design of 12 different multiome samples
 of mouse brain cortex in 4 different condition.
 
-Because the data are not published yet, we are using a publicly available dataset
-to illustrate the available functionalities of the package.
+Because the data are not published yet, we are using one of the publicly 
+available dataset from the official 10x Genomics website to illustrate the 
+available functionalities of the package and challanges faced with this type of
+data.
+
+Additionally, because of lack of public datasets with different conditions, we
+cannot illustrate the full pipeline, but we'll go through the implemented
+functionalities and we'll illustrate possible examples on real data.
 
 # Loading Data
 
@@ -80,7 +95,7 @@ genes, but this file could be very heavy to store in memory and to manipulate.
 A way to avoid this is to create an annotation by aid of an EnsDb package, which
 downloads the annotation data for an entire genome.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 ensdb <- EnsDb.Mmusculus.v79
 seqlevelsStyle(ensdb) <- "UCSC"
 annotation <- GetGRangesFromEnsDb(ensdb = ensdb)
@@ -269,6 +284,7 @@ scope.
 Indeed, further versions of this function will implement other methods.
 
 ```{r}
+allen <- logNormCounts(allen)
 sce <- assignLabels(sce, allen, "subclass_label")
 head(sce$SingleR)
 ```
@@ -280,8 +296,7 @@ understanding their clustering and this can be easily done with the `plotTSNE`
 function of the `scater` package.
 
 ```{r}
-tsne <- plotTSNE(multiome[[n]],colour_by="SingleR")+
-        scale_color_manual(values=subclass.10xgenomics.color)
+tsne <- plotTSNE(sce,colour_by="SingleR")
 ```
 
 # Differential Analysis
@@ -331,6 +346,12 @@ number of columns as for the RNA.
 sce_pseudo_atac <- aggregateAcrossCells(altExp(sce), use.assay.type="counts",
         id=DataFrame(label=sce$SingleR))
 altExp(sce_pseudo) <- sce_pseudo_atac
+```
+
+At this point it is possible to apply and visualize the data like bulk data.
+
+```{r}
+plotPCA(sce_pseudo, colour_by="SingleR")
 ```
 
 But when we have multiple ATAC experiments, coming from different conditions,
