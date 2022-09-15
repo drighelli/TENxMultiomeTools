@@ -35,21 +35,22 @@ createTracks <- function(sce, cellTypesCol="singleR", cellType, bamdir, outdir,
     for( bamfile in c("gex_possorted_bam.bam$", "atac_possorted_bam.bam$"))
     {
         bami <- bam[grep(bamfile, bam)]
-        prefix <- ifelse( length(grep("gex", bami)) != 0, "/GEX_", "/ATAC_" )
+        prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX_", "ATAC_" )
         bamiout <- paste0(outdir, prefix, cellType)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
                       bamiout)
         message("executing sinto to create ", cellType, " bam file")
         message(cmd)
-        # system(cmd)
+        system(cmd)
         bamiout <- list.files(path=bamiout, pattern=cellType, full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
         message("executing samtools index to sort ", cellType, " bam file")
         message(cmd)
         system(cmd)
-        cmd <- paste0("bamCoverage -b ", bamiout, " -o ", gsub(".bam", ".bw", f),
-                      " -p ", ncores)
+        cmd <- paste0("bamCoverage -b ", bamiout, " -o ",
+            gsub(".bam", paste0("_",prefix,".bw"), bamiout), " -p ",
+            ncores)
         message("executing bamCoverage to create ", cellType, " bigwig track")
         message(cmd)
         system(cmd)
