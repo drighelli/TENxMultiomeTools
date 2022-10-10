@@ -100,6 +100,7 @@ read10xMultiome <- function(
     sce <- splitAltExps(sce, rowData(sce)$Type, ref="Gene Expression")
     altExp(sce) <- .setRowRanges(altExp(sce))
     if (addfrags) altExp(sce) <- .setFragpath(altExp(sce), sample.path)
+    metadata(sce)$path <- sample.path
     if ( is.null(sample.name) )
     {
         if ( length(grep("outs/filtered_feature_bc_matrix",
