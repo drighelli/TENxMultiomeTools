@@ -15,7 +15,7 @@
 #'
 #' @examples
 createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
-    bcNorm="CPM" ,ncores=1)
+    bcNorm="CPM", ncores=1)
 {
     stopifnot( all( is(sce, "SingleCellExperiment"),
         (cellTypesCol %in% colnames(colData(sce))),
@@ -28,22 +28,25 @@ createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
     bc <- colData(sce)$Barcode[colData(sce)[[cellTypesCol]] == cellType]
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
-    bcfn <- paste0(outdir, "/", cellType, "_barcodes.tsv")
-    write.table(x=data.frame(bc, cellType), file=bcfn,
-        quote=FALSE, sep="\t",
-        row.names=FALSE, col.names=FALSE )
+    id <- basename(unique(sce$Sample))
+    bcfn <- paste0(outdir, "/", id, "_", cellType,
+        "_barcodes.tsv")
+    write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
+        quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
     bam <- list.files(bamdir, pattern="*.bam$", recursive=TRUE, full.names=TRUE)
     for( bamfile in c("gex_possorted_bam.bam$", "atac_possorted_bam.bam$"))
     {
         bami <- bam[grep(bamfile, bam)]
-        prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX_", "ATAC_" )
-        bamiout <- paste0(outdir, prefix, cellType)
+        prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
+        bamiout <- paste0(outdir, prefix, "_", id, "_", cellType)
+        dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
-                      bamiout, " -p ",)
-        message("executing sinto to create ", cellType, " bam file")
+                      bamiout, " -p ", ncores)
+        message("executing sinto to create ", id, " ", cellType, " bam file")
         message(cmd)
         system(cmd)
-        bamiout <- list.files(path=bamiout, pattern=cellType, full.names=TRUE)
+        bamiout <- list.files(path=bamiout, pattern=paste0(id,"_", cellType),
+            full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
         message("executing samtools index to sort ", cellType, " bam file")
