@@ -16,7 +16,7 @@
 #' @examples
 #' # TBD
 #'
-assignLabels <- function(sce, reference, refColLab, ...)
+assignLabels <- function(sce, reference, refColLab="SingleR", ...)
 {
     stopifnot(all(is(sce, "SingleCellExperiment"),
         is(reference, "SingleCellExperiment"),

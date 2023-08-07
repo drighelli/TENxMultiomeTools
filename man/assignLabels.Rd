@@ -4,7 +4,7 @@
 \alias{assignLabels}
 \title{assignLabels}
 \usage{
-assignLabels(sce, reference, refColLab, ...)
+assignLabels(sce, reference, refColLab = "SingleR", ...)
 }
 \arguments{
 \item{sce}{a SingleCellExperiment object}

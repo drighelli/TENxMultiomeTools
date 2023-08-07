@@ -6,14 +6,17 @@
 \usage{
 createTracks(
   sce,
-  cellTypesCol = "singleR",
+  cellTypesCol = "SingleR",
   cellType,
   bamdir,
   outdir,
+  bcNorm = "CPM",
   ncores = 1
 )
 }
 \arguments{
+\item{bcNorm}{normalization to use with bamCoverage}
+
 \item{ncores}{}
 }
 \description{

@@ -47,7 +47,7 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
         "GEX"="gex_possorted_bam.bam$",
         "ATAC"="atac_possorted_bam.bam$")
 
-    for( bamfile in bamfiles)
+    for( bamfile in bamfiles )
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
