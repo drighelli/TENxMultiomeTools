@@ -29,6 +29,7 @@ createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
     id <- basename(unique(sce$Sample))
+    if (!dir.exists(paste0(outdir,"/bc/"))) dir.create(outdir, recursive=TRUE)
     bcfn <- paste0(outdir, "/bc/", id, "_", cellType,
         "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
