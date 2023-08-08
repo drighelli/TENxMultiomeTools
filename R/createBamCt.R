@@ -36,7 +36,8 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
     id <- basename(unique(sce$Sample))
-    bcfn <- paste0(outdir, "/", id, "_", cellType,
+    if (!dir.exists(outdir)) dir.create(outdir, recursive=TRUE)
+    bcfn <- paste0(outdir, "/bc/", id, "_", cellType,
                    "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
                 quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
@@ -51,7 +52,7 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
-        bamiout <- paste0(outdir, prefix, "_", id, "_", cellType)
+        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
         dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
                       bamiout, " -p ", ncores)

@@ -29,7 +29,7 @@ createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
     id <- basename(unique(sce$Sample))
-    bcfn <- paste0(outdir, "/", id, "_", cellType,
+    bcfn <- paste0(outdir, "/bc/", id, "_", cellType,
         "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
         quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
@@ -38,7 +38,7 @@ createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
-        bamiout <- paste0(outdir, prefix, "_", id, "_", cellType)
+        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
         dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
                       bamiout, " -p ", ncores)
@@ -53,7 +53,7 @@ createTracks <- function(sce, cellTypesCol="SingleR", cellType, bamdir, outdir,
         message(cmd)
         system(cmd)
         cmd <- paste0("bamCoverage --normalizeUsing ", bcNorm, " -b ", bamiout,
-            " -o ", gsub(".bam", paste0("_",prefix,".bw"), bamiout), " -p ",
+            " -o ", gsub(".bam", paste0("_", prefix,".bw"), bamiout), " -p ",
             ncores)
         message("executing bamCoverage to create ", cellType, " bigwig track")
         message(cmd)
