@@ -27,6 +27,7 @@ computeSignacMetrics <- function(sce, annotation)
     rm(rna)
     # create ATAC assay and add it to the object
     atac <- counts(altExp(sce))
+    if (is(atac, "DelayedArray")) atac <- Matrix(atac, nrow=dim(atac)[1], ncol=dim(atac)[2])
     if(is.null(rownames(atac))) rownames(atac) <- rowData(altExp(sce))$Symbol
     if(is.null(colnames(atac))) colnames(atac) <- colData(sce)$Barcode
     seu[["ATAC"]] <- CreateChromatinAssay(
