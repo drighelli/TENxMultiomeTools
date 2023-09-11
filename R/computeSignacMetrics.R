@@ -6,6 +6,7 @@
 #' @return a SingleCellExperiment object
 #' @importFrom Signac NucleosomeSignal TSSEnrichment CreateChromatinAssay
 #' @importFrom Seurat CreateSeuratObject
+#' @importFrom Matrix Matrix
 #' @export
 #'
 #' @examples
@@ -16,7 +17,7 @@ computeSignacMetrics <- function(sce, annotation)
     stopifnot(all(is(sce, "SingleCellExperiment"), is(annotation, "GRanges")))
     # create a Seurat object containing the RNA data
     rna <- counts(sce)
-    if (is(rna, "DelayedArray")) rna <- Matrix(rna)
+    if (is(rna, "DelayedArray")) rna <- Matrix(rna, nrow=dim(rna)[1], ncol=dim(rna)[2])
     if(is.null(rownames(rna))) rownames(rna) <- rowData(sce)$ID
     if(is.null(colnames(rna))) colnames(rna) <- colData(sce)$Barcode
     seu <- CreateSeuratObject(

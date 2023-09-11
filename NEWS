@@ -1,0 +1,2 @@
+v0.1.3
+- fixed bug in conversion DelayedArray to Matrix in computeSignacMetrics
