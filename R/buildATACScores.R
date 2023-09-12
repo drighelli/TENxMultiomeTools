@@ -29,7 +29,7 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
             cellType %in% unique(colData(sce)[[cellTypesCol]])))
 
     idx <- which(c(mainExpName(sce), altExpNames(sce)) %in% assayName)
-
+    assayNow <- mainExpName(sce)
     if(idx==2) {sce <- swapAltExp(sce, name=assayName)}
 
     if (lncounts) sce <- logNormCounts(sce)
@@ -50,6 +50,6 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
         rowRanges(scect)$score <- counts(scect)[,1]
     }
 
-    if(idx==2) {sce <- swapAltExp(sce)}
+    if(idx==2) {sce <- swapAltExp(sce, name=assayNow)}
     return(sce)
 }
