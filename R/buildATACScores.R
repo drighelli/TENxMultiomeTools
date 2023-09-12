@@ -49,7 +49,7 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
     {
         rowRanges(scect)$score <- counts(scect)[,1]
     }
-
+    rowRanges(sce) <- rowRanges(scect)
     if(idx==2) {sce <- swapAltExp(sce, name=assayNow)}
     return(sce)
 }
