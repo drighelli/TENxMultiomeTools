@@ -38,10 +38,8 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
 {
     ### NOTES REMOVE HARDCODING BARCODES AND SAMPLE COLDATA NAMES
     stopifnot( all( is(sce, "SingleCellExperiment"),
-        all( c(cellTypesCol, bcCol, sampleCol %in% colnames(colData(sce)))),
-        (cellType %in% unique(colData(sce)[[cellTypesCol]]))
-        )
-    )
+        all( c(cellTypesCol, bcCol, sampleCol) %in% colnames(colData(sce))),
+        (cellType %in% unique(colData(sce)[[cellTypesCol]]))))
     bamType <- match.arg(bamType)
 
     bc <- colData(sce)[[bcCol]][colData(sce)[[cellTypesCol]] == cellType]
