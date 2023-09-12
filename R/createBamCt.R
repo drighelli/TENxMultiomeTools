@@ -4,16 +4,22 @@
 #' for the specified cell type.
 #' Names of the original bam files are: "gex_possorted_bam.bam$",
 #' "atac_possorted_bam.bam$". At the moment hard-coded.
+#'
 #' @param sce a SingleCellExperiment object with cellTypesCol column in the
 #' colData
 #' @param cellTypesCol character indicating the colData column name to use for
 #' selecting the barcodes
 #' @param cellType character indicating the cell to retrieve from the
 #' cellTypesCol
+#' @param sampleName the name of the sample to use for the output files, if NULL
+#' (default) if gets the sample present in the `sampleCol` `colData` column.
 #' @param bamdir path to the directory where to find the original bam files
 #' @param bamType one of "GEX", "ATAC", "both" indicating if the user wants to
 #' produce bams for both omics or just GEX or ATAC (default is both)
 #' @param outdir the path to output directory
+#' @param sampleCol name of the colData column to get the name of the sample to
+#' use for the output files (default is `Sample`)
+#' @param bcCol name of the colData column to get the barcodes (default is `Barcode`)
 #' @param ncores number of cores to use
 #'
 #' @return none
@@ -21,22 +27,22 @@
 #'
 #' @examples
 #' TBD
-createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
-                        bamType=c("both", "GEX", "ATAC"), outdir, ncores=1)
+createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
+                        bamdir, bamType=c("both", "GEX", "ATAC"), outdir,
+                        sampleCol="Sample", bcCol="Barcode", ncores=1)
 {
     ### NOTES REMOVE HARDCODING BARCODES AND SAMPLE COLDATA NAMES
     stopifnot( all( is(sce, "SingleCellExperiment"),
-                 (cellTypesCol %in% colnames(colData(sce))),
-                 ("Barcode" %in% colnames(colData(sce))),
-                 (cellType %in% unique(colData(sce)[[cellTypesCol]]))
+        all( c(cellTypesCol, bcCol, sampleCol %in% colnames(colData(sce)))),
+        (cellType %in% unique(colData(sce)[[cellTypesCol]]))
         )
     )
     bamType <- match.arg(bamType)
 
-    bc <- colData(sce)$Barcode[colData(sce)[[cellTypesCol]] == cellType]
+    bc <- colData(sce)[[bcCol]][colData(sce)[[cellTypesCol]] == cellType]
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
-    id <- basename(unique(sce$Sample))
+    if(is.null(sampleName)) id <- basename(unique(sce[[sampleCol]]))
 
     if (!dir.exists(paste0(outdir,"/bc/"))) dir.create(paste0(outdir,"/bc/"), recursive=TRUE)
     bcfn <- paste0(outdir, "/bc/", id, "_", cellType, "_barcodes.tsv")
