@@ -27,7 +27,6 @@
 #' @return a `SingleCellExperiment` with the `outdir` stored in `metadata$ct_bams`
 #' @export
 #'
-#' @importFrom SingleCellExperiment metadata
 #'
 #' @examples
 #' TBD

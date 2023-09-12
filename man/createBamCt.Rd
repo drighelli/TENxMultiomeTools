@@ -8,10 +8,15 @@ createBamCt(
   sce,
   cellTypesCol = "SingleR",
   cellType,
+  sampleName = NULL,
   bamdir,
   bamType = c("both", "GEX", "ATAC"),
   outdir,
-  ncores = 1
+  sort = TRUE,
+  sampleCol = "Sample",
+  bcCol = "Barcode",
+  ncores = 1,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -24,6 +29,9 @@ selecting the barcodes}
 \item{cellType}{character indicating the cell to retrieve from the
 cellTypesCol}
 
+\item{sampleName}{the name of the sample to use for the output files, if NULL
+(default) if gets the sample present in the `sampleCol` `colData` column.}
+
 \item{bamdir}{path to the directory where to find the original bam files}
 
 \item{bamType}{one of "GEX", "ATAC", "both" indicating if the user wants to
@@ -31,10 +39,19 @@ produce bams for both omics or just GEX or ATAC (default is both)}
 
 \item{outdir}{the path to output directory}
 
+\item{sort}{logical for automatically sort the produced bam files (default TRUE)}
+
+\item{sampleCol}{name of the colData column to get the name of the sample to
+use for the output files (default is `Sample`)}
+
+\item{bcCol}{name of the colData column to get the barcodes (default is `Barcode`)}
+
 \item{ncores}{number of cores to use}
+
+\item{verbose}{logical to print more informative messages (default FALSE)}
 }
 \value{
-none
+a `SingleCellExperiment` with the `outdir` stored in `metadata$ct_bams`
 }
 \description{
 starting from a cell type annotated on the SingleCellExperiment
