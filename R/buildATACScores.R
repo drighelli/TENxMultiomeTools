@@ -40,9 +40,9 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
     {
         if(lncounts)
         {
-            rowRanges(scect)$score <- rowSums(logcounts(scect))
+            rowRanges(scect)$score <- rowSums(as.matrix(logcounts(scect)))
         } else {
-            rowRanges(scect)$score <- rowSums(counts(scect))
+            rowRanges(scect)$score <- rowSums(as.matrix(counts(scect)))
         }
 
     } else
