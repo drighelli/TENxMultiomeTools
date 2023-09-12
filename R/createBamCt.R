@@ -37,10 +37,9 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
     id <- basename(unique(sce$Sample))
-    bcdir <- system.file(outdir, "bc/")
-    if (!dir.exists(bcdir)) dir.create(bcdir, recursive=TRUE)
-    bcfn <- paste0(bcdir,"/", id, "_", cellType,
-                   "_barcodes.tsv")
+
+    if (!dir.exists(paste0(outdir,"/bc/"))) dir.create(paste0(outdir,"/bc/"), recursive=TRUE)
+    bcfn <- paste0(outdir, "/bc/", id, "_", cellType, "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
                 quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
     bam <- list.files(bamdir, pattern="*.bam$", recursive=TRUE, full.names=TRUE)
