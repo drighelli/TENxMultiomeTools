@@ -17,19 +17,24 @@
 #' @param bamType one of "GEX", "ATAC", "both" indicating if the user wants to
 #' produce bams for both omics or just GEX or ATAC (default is both)
 #' @param outdir the path to output directory
+#' @param sort logical for automatically sort the produced bam files (default TRUE)
 #' @param sampleCol name of the colData column to get the name of the sample to
 #' use for the output files (default is `Sample`)
 #' @param bcCol name of the colData column to get the barcodes (default is `Barcode`)
 #' @param ncores number of cores to use
+#' @param verbose logical to print more informative messages (default FALSE)
 #'
-#' @return none
+#' @return a `SingleCellExperiment` with the `outdir` stored in `metadata$ct_bams`
 #' @export
+#'
+#' @importFrom SingleCellExperiment metadata
 #'
 #' @examples
 #' TBD
 createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
                         bamdir, bamType=c("both", "GEX", "ATAC"), outdir,
-                        sampleCol="Sample", bcCol="Barcode", ncores=1)
+                        sort=TRUE, sampleCol="Sample", bcCol="Barcode",
+                        ncores=1, verbose=FALSE)
 {
     ### NOTES REMOVE HARDCODING BARCODES AND SAMPLE COLDATA NAMES
     stopifnot( all( is(sce, "SingleCellExperiment"),
@@ -41,10 +46,11 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
 
     bc <- colData(sce)[[bcCol]][colData(sce)[[cellTypesCol]] == cellType]
 
-    message("Writing ", cellType, " barcodes on file for sinto usage")
+    if(verbose) message("Writing ", cellType, " barcodes on file for sinto usage")
     if(is.null(sampleName)) id <- basename(unique(sce[[sampleCol]]))
 
-    if (!dir.exists(paste0(outdir,"/bc/"))) dir.create(paste0(outdir,"/bc/"), recursive=TRUE)
+    if (!dir.exists(paste0(outdir,"/bc/")))
+        dir.create(paste0(outdir,"/bc/"), recursive=TRUE)
     bcfn <- paste0(outdir, "/bc/", id, "_", cellType, "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
                 quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
@@ -63,15 +69,32 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
         dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
                       bamiout, " -p ", ncores)
-        message("executing sinto to create ", id, " ", cellType, " bam file")
+        if (verbose) message("executing sinto to create ", id, " ", cellType,
+                        " bam file")
         message(cmd)
         system(cmd)
         bamiout <- list.files(path=bamiout, pattern=paste0(id,"_", cellType),
                               full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
-        message("executing samtools index to sort ", cellType, " bam file")
+        if(verbose) message("executing samtools index for ", cellType,
+                        " bam file")
         message(cmd)
         system(cmd)
+        if(sort)
+        {
+            if(verbose) message("executing samtools sort and index for ",
+                            bamiout, " bam file")
+            outsb <- paste0(gsub(".bam$", "", bamiout), "_sorted.bam" )
+            cmd <- paste0("samtools sort -@ ", ncores, " ", bamiout," -o ",
+                    outsb)
+            message(cmd)
+            system(cmd)
+            cmd <- paste0("samtools index -b ", outsb, " -@ 10 ")
+            message(cmd)
+            system(cmd)
+        }
     }
+    metadata(sce)$ct_bams <- outdir
+    return(sce)
 }
