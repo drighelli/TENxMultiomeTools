@@ -24,6 +24,7 @@
 createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
                         bamType=c("both", "GEX", "ATAC"), outdir, ncores=1)
 {
+    ### NOTES REMOVE HARDCODING BARCODES AND SAMPLE COLDATA NAMES
     stopifnot( all( is(sce, "SingleCellExperiment"),
                  (cellTypesCol %in% colnames(colData(sce))),
                  ("Barcode" %in% colnames(colData(sce))),
@@ -36,8 +37,9 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, bamdir,
 
     message("Writing ", cellType, " barcodes on file for sinto usage")
     id <- basename(unique(sce$Sample))
-    if (!dir.exists(paste0(outdir,"/bc/"))) dir.create(outdir, recursive=TRUE)
-    bcfn <- paste0(outdir, "/bc/", id, "_", cellType,
+    bcdir <- system.file(outdir, "bc/")
+    if (!dir.exists(bcdir)) dir.create(bcdir, recursive=TRUE)
+    bcfn <- paste0(bcdir,"/", id, "_", cellType,
                    "_barcodes.tsv")
     write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
                 quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
