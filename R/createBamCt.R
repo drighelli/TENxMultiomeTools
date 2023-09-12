@@ -62,15 +62,15 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
-        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
-        dir.create(bamiout)
+        # bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
+        # dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
-                      bamiout, " -p ", ncores)
+                      outdir, " -p ", ncores)
         if (verbose) message("executing sinto to create ", id, " ", cellType,
                         " bam file")
         message(cmd)
         system(cmd)
-        bamiout <- list.files(path=bamiout, pattern=paste0(id,"_", cellType),
+        bamiout <- list.files(path=outdir, pattern=paste0(id,"_", cellType),
                               full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
