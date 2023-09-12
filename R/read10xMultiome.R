@@ -74,6 +74,7 @@ read10xMultiome <- function(
             " 10x default outs path"))
         sample.path <- file.path(sample.path, "outs")
     }
+    if(!is.null(sample.name)) data <- paste0(sample.name, data)
     filenm <- paste0(data, "_feature_bc_matrix", switch(type, HDF5 = ".h5", ""))
     filepath <- file.path(sample.path, filenm)
     if(type!="sparse")
