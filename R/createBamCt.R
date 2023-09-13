@@ -42,7 +42,7 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
     bamType <- match.arg(bamType)
 
     bc <- colData(sce)[[bcCol]][colData(sce)[[cellTypesCol]] == cellType]
-    ctstr <- gsub(" ", "_", cellType)
+    ctstr <- gsub("/","_",gsub(" ", "_", cellType))
     if(verbose) message("Writing ", cellType, " barcodes on file for sinto usage")
     if(is.null(sampleName)) id <- basename(unique(sce[[sampleCol]]))
 
