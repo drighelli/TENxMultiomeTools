@@ -61,7 +61,7 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
-        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
+        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", ctstr)
         # dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
                       bamiout, " -p ", ncores)
