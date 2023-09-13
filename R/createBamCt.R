@@ -42,14 +42,14 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
     bamType <- match.arg(bamType)
 
     bc <- colData(sce)[[bcCol]][colData(sce)[[cellTypesCol]] == cellType]
-
+    ctstr <- gsub(" ", "_", cellType)
     if(verbose) message("Writing ", cellType, " barcodes on file for sinto usage")
     if(is.null(sampleName)) id <- basename(unique(sce[[sampleCol]]))
 
     if (!dir.exists(paste0(outdir,"/bc/")))
         dir.create(paste0(outdir,"/bc/"), recursive=TRUE)
-    bcfn <- paste0(outdir, "/bc/", id, "_", cellType, "_barcodes.tsv")
-    write.table(x=data.frame(bc, paste0(id,"_", cellType)), file=bcfn,
+    bcfn <- paste0(outdir, "/bc/", id, "_", ctstr, "_barcodes.tsv")
+    write.table(x=data.frame(bc, paste0(id,"_", ctstr)), file=bcfn,
                 quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE )
     bam <- list.files(bamdir, pattern="*.bam$", recursive=TRUE, full.names=TRUE)
 
@@ -70,7 +70,7 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
                         " bam file")
         message(cmd)
         system(cmd)
-        bamiout <- list.files(path=outdir, pattern=paste0(id,"_", cellType),
+        bamiout <- list.files(path=outdir, pattern=paste0(id,"_", ctstr),
                               full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
         cmd <- paste0("samtools index -b ", bamiout, " -@ ", ncores)
