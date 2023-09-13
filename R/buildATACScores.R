@@ -28,8 +28,14 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
 {
     stopifnot(all(is(sce, "SingleCellExperiment"),
             any(c(mainExpName(sce), altExpNames(sce)) %in% assayName),
-            cellTypesCol %in% colnames(colData(sce)),
-            cellType %in% unique(colData(sce)[[cellTypesCol]])))
+            cellTypesCol %in% colnames(colData(sce))))
+    ct0<-FALSE
+    if(!cellType %in% unique(colData(sce)[[cellTypesCol]]))
+    {
+        ct0 <- TRUE
+        warning("The ", cellType, " is not available for the experiment\n",
+                "A 0 score is provided in this case!")
+    }
 
     idx <- which(c(mainExpName(sce), altExpNames(sce)) %in% assayName)
     assayNow <- mainExpName(sce)
@@ -37,21 +43,28 @@ buildATACScores <- function(sce, cellTypesCol="SingleR", cellType,
 
     if (lncounts) sce <- logNormCounts(sce)
 
-    scect <- sce[,colData(sce)[[cellTypesCol]]==cellType]
+    if(!ct0){
+        ## This needs to be changed with another wrapper external function
+        ## skipping this case
+        scect <- sce[,colData(sce)[[cellTypesCol]]==cellType]
 
-    if(dim(scect)[2]>1)
-    {
-        if(lncounts)
+        if(dim(scect)[2]>1)
         {
-            rowRanges(scect)$score <- rowSums(as.matrix(logcounts(scect)))
-        } else {
-            rowRanges(scect)$score <- rowSums(as.matrix(counts(scect)))
-        }
+            if(lncounts)
+            {
+                rowRanges(scect)$score <- rowSums(as.matrix(logcounts(scect)))
+            } else {
+                rowRanges(scect)$score <- rowSums(as.matrix(counts(scect)))
+            }
 
-    } else
-    {
-        rowRanges(scect)$score <- counts(scect)[,1]
+        } else
+        {
+            rowRanges(scect)$score <- counts(scect)[,1]
+        }
+    }else{
+        rowRanges(scect)$score <- 0
     }
+
     rowRanges(sce) <- rowRanges(scect)
     if(idx==2) {sce <- swapAltExp(sce, name=assayNow)}
     return(sce)

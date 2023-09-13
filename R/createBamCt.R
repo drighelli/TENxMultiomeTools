@@ -24,7 +24,7 @@
 #' @param ncores number of cores to use
 #' @param verbose logical to print more informative messages (default FALSE)
 #'
-#' @return a `SingleCellExperiment` with the `outdir` stored in `metadata$ct_bams`
+#' @return character of the `outdir`
 #' @export
 #'
 #'
@@ -92,6 +92,5 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
             system(cmd)
         }
     }
-    metadata(sce)$ct_bams <- outdir
-    return(sce)
+    return(outdir)
 }
