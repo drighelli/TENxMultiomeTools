@@ -16,6 +16,10 @@
 #' lognormalized counts (logNormCouts is used), default is FALSE
 #'
 #' @return a SCE with a `score` column in the rowRanges for the atac exp
+#' @importFrom SingleCellExperiment mainExpName altExpNames swapAltExp logcounts
+#' counts
+#' @importFrom SummarizedExperiment rowRanges
+#' @importFrom scran logNormCounts
 #' @export
 #'
 #' @examples

@@ -35,7 +35,6 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
                         sort=TRUE, sampleCol="Sample", bcCol="Barcode",
                         ncores=1, verbose=FALSE)
 {
-    ### NOTES REMOVE HARDCODING BARCODES AND SAMPLE COLDATA NAMES
     stopifnot( all( is(sce, "SingleCellExperiment"),
         all( c(cellTypesCol, bcCol, sampleCol) %in% colnames(colData(sce))),
         (cellType %in% unique(colData(sce)[[cellTypesCol]]))))
@@ -62,14 +61,15 @@ createBamCt <- function(sce, cellTypesCol="SingleR", cellType, sampleName=NULL,
     {
         bami <- bam[grep(bamfile, bam)]
         prefix <- ifelse( length(grep("gex", bami)) != 0, "GEX", "ATAC" )
-        # bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
+        bamiout <- paste0(outdir, "/", prefix, "_", id, "_", cellType)
         # dir.create(bamiout)
         cmd <- paste0("sinto filterbarcodes -b ", bami, " -c ", bcfn, " --outdir ",
-                      outdir, " -p ", ncores)
+                      bamiout, " -p ", ncores)
         if (verbose) message("executing sinto to create ", id, " ", cellType,
                         " bam file")
         message(cmd)
         system(cmd)
+        cmd <- paste0("mv ", bamiout, "/", bcfn,".bam ", bamiout, ".bam")
         bamiout <- list.files(path=outdir, pattern=paste0(id,"_", ctstr),
                               full.names=TRUE)
         bamiout <- bamiout[grep("*.bam$",bamiout)]
