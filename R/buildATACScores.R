@@ -19,7 +19,6 @@
 #' @importFrom SingleCellExperiment mainExpName altExpNames swapAltExp logcounts
 #' counts
 #' @importFrom SummarizedExperiment rowRanges
-#' @importFrom scran logNormCounts
 #' @export
 #'
 #' @examples
