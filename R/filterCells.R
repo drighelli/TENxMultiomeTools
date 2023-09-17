@@ -119,6 +119,56 @@ computeFilterCellsMetrics <- function(sce,
     return(sce)
 }
 
+#' filterDoubtfulCells
+#' @description
+#' It filters out all the cells imputed to be doublets. It takes for granted that
+#' some labels have been assigned to the cells and a kind of `delta.next` score
+#' (see `dnext` parameter for info) is available in `colData(sce)`.
+#' Specifically, it filters out all the cells with a score in the `dnext.col`
+#' less than `dnext`.
+#' In the same manner it filters out the imputed doublets with a value in
+#' the `dbl.col` equal to `dbl.val`. In case the `dbl.val` is a numeric value,
+#' it filters out all the cells with a value higher than it.
+#'
+#' @param sce SingleCellExperiment with assigned labels (it needs the
+#' `dnext` column in the `colData`) and, optionally, computed doublets
+#' @param dnext the threshold (default is 0.03) for the `dnext.col` score to
+#' keep the doubtful cells (see \lin[SingleR]{SingleR} `delta.next` column in
+#' its returned predictions)
+#' @param doubls logical for filtering doublets cells
+#' @param dbl.val the value to use for the cells, if character (default is `singlet`)
+#' it keeps the cells with this value from the `dnext.col`.
+#' If numeric, it keeps the cells with a value lesser that this value.
+#' @param dnext.col the `colData(sce)` column to check the `dnext`
+#' @param dbl.col the `colData(sce)` column to check the `dbl.val`
+#'
+#' @return a SingleCellExperiment with filtered cells
+#' @export
+#'
+#' @examples
+#' TBD
+filterDoubtfulCells <- function(sce, dnext=0.03, doubls=TRUE, dbl.val="singlet",
+                            dnext.col="SR.deltanext",
+                            dbl.col="dbl.calls")
+{
+    stopifnot(all(
+        is(sce, "SingleCellExperiment"),
+        (dnext.col %in% colnames(colData(sce))),
+        ifelse(doubls, (dbl.col %in% colnames(colData(sce))), TRUE)
+    ))
+
+    sce <- sce[, sce[[dnext.col]] > dnext]
+    if (doubls)
+    {
+        if (!is.numeric(dbl.val)) {
+            sce <- sce[[dbl.col==dbl.val]]
+        } else {
+            sce <- sce[[dbl.col<dbl.val]]
+        }
+    }
+    return(sce)
+}
+
 # computeFilterCellsMetricsOnList <- function(scelist,
 #     metric=c("quantile", "is.outlier", "both"),
 #     lowQuantThr="5%", highQuantThr="90%",
