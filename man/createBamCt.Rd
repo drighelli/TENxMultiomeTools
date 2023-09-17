@@ -51,7 +51,7 @@ use for the output files (default is `Sample`)}
 \item{verbose}{logical to print more informative messages (default FALSE)}
 }
 \value{
-a `SingleCellExperiment` with the `outdir` stored in `metadata$ct_bams`
+character of the `outdir`
 }
 \description{
 starting from a cell type annotated on the SingleCellExperiment

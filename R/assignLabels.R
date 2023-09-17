@@ -23,6 +23,13 @@ assignLabels <- function(sce, reference, refColLab="SingleR", ...)
         (refColLab %in% colnames(colData(reference)))))
     preds <- SingleR(sce, ref=reference,
         labels=reference[[refColLab]], ...)
+    if ( !("delta.next" %in% colnames(preds)) )
+    { ## old versions of SinglR use tuning.scores
+        delta.next <- preds$tuning.scores$first -  preds$tuning.scores$second
+    } else {
+        delta.next <- preds$delta.next
+    }
     sce$SingleR <- preds$labels
+    sce$SR.deltanext <- delta.next
     return(sce)
 }
