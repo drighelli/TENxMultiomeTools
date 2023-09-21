@@ -132,6 +132,7 @@ computeFilterCellsMetrics <- function(sce,
 #'
 #' @param sce SingleCellExperiment with assigned labels (it needs the
 #' `dnext` column in the `colData`) and, optionally, computed doublets
+#' @param dnext.fl logical indicating if to filter for `dnext`
 #' @param dnext the threshold (default is 0.03) for the `dnext.col` score to
 #' keep the doubtful cells (see \lin[SingleR]{SingleR} `delta.next` column in
 #' its returned predictions)
@@ -147,7 +148,8 @@ computeFilterCellsMetrics <- function(sce,
 #'
 #' @examples
 #' TBD
-filterDoubtfulCells <- function(sce, dnext=0.03, doubls=TRUE, dbl.val="singlet",
+filterDoubtfulCells <- function(sce, dnext.fl=TRUE, dnext=0.03,
+                            doubls=TRUE, dbl.val="singlet",
                             dnext.col="SR.deltanext",
                             dbl.col="dbl.calls")
 {
@@ -157,7 +159,11 @@ filterDoubtfulCells <- function(sce, dnext=0.03, doubls=TRUE, dbl.val="singlet",
         ifelse(doubls, (dbl.col %in% colnames(colData(sce))), TRUE)
     ))
 
-    sce <- sce[, sce[[dnext.col]] > dnext]
+    if(dnext.fl)
+    {
+        sce <- sce[, sce[[dnext.col]] > dnext]
+    }
+
     if (doubls)
     {
         if (!is.numeric(dbl.val)) {

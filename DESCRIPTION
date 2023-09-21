@@ -38,7 +38,8 @@ Imports:
     scuttle,
     SingleR,
     ggplot2,
-    Matrix
+    Matrix,
+    scDblFinder
 Suggests: 
     BiocStyle, 
     EnsDb.Mmusculus.v79
