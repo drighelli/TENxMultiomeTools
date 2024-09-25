@@ -12,3 +12,6 @@ BiocManager::install("drighelli/TENxMultiomeTools")
 library(TENxMultiomeTools)
 ```
 
+For general usage consult the [Vignette](https://github.com/drighelli/TENxMultiomeTools/blob/main/vignette/intro.Rmd)
+
+
