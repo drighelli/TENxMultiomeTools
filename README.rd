@@ -1,4 +1,4 @@
-#TENxMultiomeTools
+# TENxMultiomeTools
 
 This is the repository of the TENxMultiomeTools an R package which collects multiple tools for Quality Control of scRNAseq and scATACseq data.
 
